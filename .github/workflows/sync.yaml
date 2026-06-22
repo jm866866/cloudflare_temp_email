@@ -3,9 +3,6 @@ name: Upstream Sync
 permissions:
   contents: write
 
-permissions:
-  contents: write
-
 on:
   schedule:
     - cron: "0 0 * * 1"
@@ -18,7 +15,13 @@ jobs:
     if: ${{ github.event.repository.fork }}
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Sync upstream changes
-        run: gh repo sync ${{ github.repository }} --source dreamhunter2333/cloudflare_temp_email --branch main
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git remote add upstream https://github.com/dreamhunter2333/cloudflare_temp_email.git
+          git fetch upstream
+          git merge upstream/main --no-edit
+          git push origin main
