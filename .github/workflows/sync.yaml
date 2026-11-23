@@ -1,5 +1,8 @@
 name: Upstream Sync
 
+permissions:
+  contents: write
+
 on:
   schedule:
     - cron: "0 0 * * 1"
@@ -10,11 +13,18 @@ jobs:
     name: Sync latest commits from upstream repo
     runs-on: ubuntu-latest
     if: ${{ github.event.repository.fork }}
-    permissions:
-      contents: write
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SYNC_TOKEN }}
+
       - name: Sync upstream changes
-        run: gh repo sync ${{ github.repository }} --source dreamhunter2333/cloudflare_temp_email --branch main
-        env:
-          GH_TOKEN: ${{ secrets.UPSTREAM_SYNC_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/dreamhunter2333/cloudflare_temp_email.git
+          git fetch upstream
+          git merge upstream/main --no-edit
+          git push origin main
